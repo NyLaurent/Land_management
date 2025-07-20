@@ -1,7 +1,20 @@
 import { create } from 'zustand';
-import { Land, Transfer } from '@/types';
+import { Land, Transfer, User, Profile } from '@/types';
 
 interface LandStore {
+  // Auth state
+  user: User | null;
+  profile: Profile | null;
+  isAuthLoading: boolean;
+  isAuthenticated: boolean;
+  
+  // Auth actions
+  setUser: (user: User | null) => void;
+  setProfile: (profile: Profile | null) => void;
+  setAuthLoading: (loading: boolean) => void;
+  setAuthenticated: (authenticated: boolean) => void;
+  clearAuth: () => void;
+  
   // Land state
   lands: Land[];
   selectedLand: Land | null;
@@ -34,6 +47,26 @@ interface LandStore {
 }
 
 export const useLandStore = create<LandStore>((set) => ({
+  // Initial auth state
+  user: null,
+  profile: null,
+  isAuthLoading: true,
+  isAuthenticated: false,
+  
+  // Auth actions
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setProfile: (profile) => set({ profile }),
+  setAuthLoading: (loading) => set({ isAuthLoading: loading }),
+  setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  
+  clearAuth: () => set({ 
+    user: null, 
+    profile: null, 
+    isAuthenticated: false,
+    lands: [],
+    transfers: []
+  }),
+  
   // Initial state
   lands: [],
   selectedLand: null,

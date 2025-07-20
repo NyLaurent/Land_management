@@ -5,17 +5,83 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // We're not implementing auth for this MVP
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
 });
 
-// Database operations for Land
+// Authentication operations
+export const authOperations = {
+  // Sign up with email and password
+  async signUp(data: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+  }) {
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+        },
+      },
+    });
+    
+    return { data: authData, error };
+  },
+
+  // Sign in with email and password
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    return { data, error };
+  },
+
+  // Sign out
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+  },
+
+  // Get current user
+  async getCurrentUser() {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    return { user, error };
+  },
+
+  // Get user profile
+  async getUserProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    return { data, error };
+  },
+};
+
+// Database operations for Land (updated for auth)
 export const landOperations = {
-  // Get all land records
+  // Get all land records for current user
   async getAll() {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return { data: null, error: userError || new Error('No authenticated user') };
+    }
+
     const { data, error } = await supabase
       .from('land')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     return { data, error };
@@ -29,10 +95,17 @@ export const landOperations = {
     supporting_document: string;
     statusa?: string;
   }) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return { data: null, error: userError || new Error('No authenticated user') };
+    }
+
     const { data, error } = await supabase
       .from('land')
       .insert({
         ...landData,
+        user_id: user.id,
         statusa: landData.statusa || 'pending',
       })
       .select()
@@ -54,13 +127,20 @@ export const landOperations = {
   },
 };
 
-// Database operations for Transfers
+// Database operations for Transfers (updated for auth)
 export const transferOperations = {
-  // Get all transfers
+  // Get all transfers for current user
   async getAll() {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return { data: null, error: userError || new Error('No authenticated user') };
+    }
+
     const { data, error } = await supabase
       .from('transfers')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     return { data, error };
@@ -73,10 +153,17 @@ export const transferOperations = {
     parcel_id: string;
     status?: string;
   }) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return { data: null, error: userError || new Error('No authenticated user') };
+    }
+
     const { data, error } = await supabase
       .from('transfers')
       .insert({
         ...transferData,
+        user_id: user.id,
         status: transferData.status || 'pending',
       })
       .select()
@@ -113,7 +200,7 @@ export const transferOperations = {
   },
 };
 
-// File upload to Supabase Storage
+// File upload to Supabase Storage (unchanged)
 export const fileUpload = {
   async uploadDocument(file: File, folder: 'land-documents' | 'transfer-contracts') {
     const fileExt = file.name.split('.').pop();

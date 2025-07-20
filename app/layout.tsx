@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
-import { Navigation } from "@/components/navigation";
+import LayoutWrapper from "@/components/layout-wrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,10 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
-            <Navigation />
-            <main className="container mx-auto px-4 py-8">{children}</main>
-          </div>
+          <LayoutWrapper>{children}</LayoutWrapper>
         </Providers>
       </body>
     </html>
