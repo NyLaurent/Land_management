@@ -236,11 +236,11 @@ export default function MyLandPage() {
               </div>
 
               <div className="pt-4">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || createLandMutation.isPending}
+              <Button
+                type="submit"
+                disabled={isSubmitting || createLandMutation.isPending}
                   className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              >
                   {isSubmitting || createLandMutation.isPending ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
@@ -249,7 +249,7 @@ export default function MyLandPage() {
                   ) : (
                     "Register Land"
                   )}
-                </Button>
+              </Button>
               </div>
             </form>
           </CardContent>

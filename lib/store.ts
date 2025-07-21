@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Land, Transfer, User, Profile } from '@/types';
-import { landOperations, transferOperations } from '@/lib/supabase';
+import { landOperations, transferOperations, supabase } from '@/lib/supabase';
 
 interface LandStore {
   // Auth state
@@ -8,13 +8,20 @@ interface LandStore {
   profile: Profile | null;
   isAuthLoading: boolean;
   isAuthenticated: boolean;
+  isLoading: boolean;
   
   // Auth actions
   setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setAuthLoading: (loading: boolean) => void;
   setAuthenticated: (authenticated: boolean) => void;
+  setLoading: (loading: boolean) => void;
   clearAuth: () => void;
+  clearStore: () => void;
+  initializeAuth: () => Promise<void>;
+  fetchProfile: () => Promise<void>;
+  fetchLands: () => Promise<void>;
+  fetchTransfers: () => Promise<void>;
   
   // Land state
   lands: Land[];
@@ -56,12 +63,14 @@ export const useLandStore = create<LandStore>((set, get) => ({
   profile: null,
   isAuthLoading: true,
   isAuthenticated: false,
+  isLoading: false,
   
   // Auth actions
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   setProfile: (profile) => set({ profile }),
   setAuthLoading: (loading) => set({ isAuthLoading: loading }),
   setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  setLoading: (loading) => set({ isLoading: loading }),
   
   clearAuth: () => set({ 
     user: null, 
@@ -70,6 +79,106 @@ export const useLandStore = create<LandStore>((set, get) => ({
     lands: [],
     transfers: []
   }),
+
+  clearStore: () => set({ 
+    user: null, 
+    profile: null, 
+    isAuthenticated: false,
+    lands: [],
+    transfers: []
+  }),
+
+  initializeAuth: async () => {
+    try {
+      set({ isAuthLoading: true });
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        set({ 
+          user: {
+            id: user.id,
+            email: user.email!,
+            created_at: user.created_at
+          }, 
+          isAuthenticated: true 
+        });
+        
+        // Get user profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData) {
+          set({ profile: profileData });
+        }
+      } else {
+        set({ 
+          user: null, 
+          profile: null,
+          isAuthenticated: false 
+        });
+      }
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      set({ 
+        user: null, 
+        profile: null,
+        isAuthenticated: false 
+      });
+    } finally {
+      set({ isAuthLoading: false });
+    }
+  },
+
+  fetchProfile: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (data && !error) {
+        set({ profile: data });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  },
+
+  fetchLands: async () => {
+    try {
+      set({ isLandLoading: true });
+      const { data, error } = await landOperations.getAll();
+      if (data && !error) {
+        set({ lands: data });
+      }
+    } catch (error) {
+      console.error('Error fetching lands:', error);
+    } finally {
+      set({ isLandLoading: false });
+    }
+  },
+
+  fetchTransfers: async () => {
+    try {
+      set({ isTransferLoading: true });
+      const { data, error } = await transferOperations.getAll();
+      if (data && !error) {
+        set({ transfers: data });
+      }
+    } catch (error) {
+      console.error('Error fetching transfers:', error);
+    } finally {
+      set({ isTransferLoading: false });
+    }
+  },
   
   // Initial state
   lands: [],

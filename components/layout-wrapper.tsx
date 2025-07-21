@@ -1,51 +1,64 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import Navigation from "@/components/navigation";
-import AuthWrapper from "@/components/auth-wrapper";
+import { AuthWrapper } from "./auth-wrapper";
+import { Sidebar } from "./sidebar";
+import { useLandStore } from "@/lib/store";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
-function PublicLandingLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen">{children}</div>;
-}
+export function LayoutWrapper({ children }: LayoutWrapperProps) {
+  const { user } = useLandStore();
 
-function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const currentPath =
+    typeof window !== "undefined" ? window.location.pathname : "";
 
-  // Landing page gets full screen treatment without navigation
-  if (pathname === "/") {
-    return <div className="min-h-screen">{children}</div>;
-  }
+  // DEBUG: Let's see what's happening
+  console.log("🔍 Layout Debug:", {
+    currentPath,
+    user: user ? "EXISTS" : "NULL",
+  });
 
-  // Other protected pages get normal container layout
-  return (
-    <div className="min-h-screen bg-blue-50">
-      <Navigation />
-      <main className="container mx-auto px-4 py-8">{children}</main>
-    </div>
+  // Show sidebar on dashboard and protected pages
+  const protectedPaths = ["/dashboard", "/my-land", "/transfers"];
+  const shouldShowSidebar = protectedPaths.some((path) =>
+    currentPath.startsWith(path)
   );
-}
 
-export default function LayoutWrapper({ children }: LayoutWrapperProps) {
-  const pathname = usePathname();
+  // Auth pages and landing page don't need sidebar
+  const publicPaths = ["/", "/signin", "/signup"];
+  const isPublicPage = publicPaths.includes(currentPath);
 
-  // Auth pages don't need navigation
-  if (pathname === "/signin" || pathname === "/signup") {
-    return <div className="min-h-screen">{children}</div>;
+  if (isPublicPage) {
+    return (
+      <AuthWrapper>
+        <div className="min-h-screen bg-gray-50">{children}</div>
+      </AuthWrapper>
+    );
   }
 
-  // Landing page is public - no auth protection needed
-  if (pathname === "/") {
-    return <PublicLandingLayout>{children}</PublicLandingLayout>;
+  // SHOW REAL SIDEBAR on protected pages with proper spacing
+  if (shouldShowSidebar) {
+    console.log("🎯 SHOWING SIDEBAR FOR:", currentPath);
+    return (
+      <AuthWrapper>
+        <div className="min-h-screen bg-gray-50">
+          <Sidebar />
+          <main className="lg:ml-80 min-h-screen p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto">{children}</div>
+          </main>
+        </div>
+      </AuthWrapper>
+    );
   }
 
-  // All other pages need authentication
+  // Default layout
   return (
     <AuthWrapper>
-      <ProtectedLayout>{children}</ProtectedLayout>
+      <div className="min-h-screen bg-gray-50">{children}</div>
     </AuthWrapper>
   );
 }
+
+export default LayoutWrapper;

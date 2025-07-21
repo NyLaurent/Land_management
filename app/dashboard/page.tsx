@@ -55,14 +55,6 @@ export default function DashboardPage() {
       href: "/transfers",
       color: "text-orange-600 bg-orange-50",
     },
-    {
-      title: "Completed Transfers",
-      value: transfers.filter((t) => t.status === "completed").length,
-      description: "Successfully completed",
-      icon: BarChart3,
-      href: "/transfers",
-      color: "text-green-600 bg-green-50",
-    },
   ];
 
   const quickActions = [
@@ -115,21 +107,21 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Welcome Header with Refresh */}
-      <div className="flex justify-between items-center">
-        <div className="text-center space-y-4 flex-1">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Welcome back, {profile?.first_name || "User"}!
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+            Welcome back, {profile?.first_name || "User"}! 👋
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Manage your land registrations and transfers with ease. Your secure
-            digital land administration dashboard.
+          <p className="text-lg text-gray-600">
+            Here&apos;s what&apos;s happening with your land administration
+            today
           </p>
         </div>
         <Button
           onClick={handleRefresh}
           disabled={isRefreshing}
           variant="outline"
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white transition-all duration-200"
         >
           <RefreshCw
             className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -138,28 +130,28 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Statistics Cards - Only 2 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link key={stat.title} href={stat.href}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-lg bg-white rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">
+              <Card className="hover:-translate-y-1 transition-all duration-300 cursor-pointer border-0  bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden group">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                  <CardTitle className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
                     {stat.title}
                   </CardTitle>
-                  <div className={`p-3 rounded-xl ${stat.color}`}>
+                  <div
+                    className={`p-3 rounded-xl ${stat.color} group-hover:scale-110 transition-transform duration-200`}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-900 mb-1">
                     {stat.value}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {stat.description}
-                  </p>
+                  <p className="text-sm text-gray-600">{stat.description}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -176,7 +168,7 @@ export default function DashboardPage() {
             return (
               <Card
                 key={action.title}
-                className="hover:shadow-lg transition-shadow border-0 shadow-lg bg-white rounded-xl"
+                className="transition-shadow border-0  bg-white rounded-xl"
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-center space-x-4">
@@ -338,29 +330,6 @@ export default function DashboardPage() {
       </div>
 
       {/* Help Section */}
-      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-0 shadow-lg rounded-xl">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-blue-900 text-xl">Need Help?</CardTitle>
-        </CardHeader>
-        <CardContent className="text-blue-800">
-          <p className="mb-4">
-            Our digital land administration system is here to help you manage
-            your land efficiently:
-          </p>
-          <ul className="space-y-2 list-disc pl-6">
-            <li>Register new land parcels with supporting documents</li>
-            <li>Transfer ownership securely with digital contracts</li>
-            <li>Track application status in real-time</li>
-            <li>Access your land records anytime, anywhere</li>
-            <li>Get support from our dedicated team</li>
-          </ul>
-          <div className="mt-6">
-            <Button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
-              Contact Support
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

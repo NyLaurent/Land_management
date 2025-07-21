@@ -435,3 +435,4 @@ export default function SignUpPage() {
     </motion.div>
   );
 }
+ 
