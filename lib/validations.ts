@@ -44,16 +44,24 @@ export const landRegistrationSchema = z.object({
     .min(2, 'Ownership type must be at least 2 characters')
     .max(100, 'Ownership type cannot exceed 100 characters'),
   supporting_document: z
-    .instanceof(File)
+    .any()
     .optional()
     .refine(
-      (file) => !file || file.size <= 10 * 1024 * 1024,
+      (file) => {
+        if (!file) return true;
+        if (typeof window === 'undefined') return true; // Skip validation on server
+        if (!(file instanceof File)) return false;
+        return file.size <= 10 * 1024 * 1024;
+      },
       'File size must be less than 10MB'
     )
     .refine(
-      (file) => 
-        !file || 
-        ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type),
+      (file) => {
+        if (!file) return true;
+        if (typeof window === 'undefined') return true; // Skip validation on server
+        if (!(file instanceof File)) return false;
+        return ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+      },
       'Only JPEG, PNG, and PDF files are allowed'
     ),
 });
@@ -70,16 +78,24 @@ export const transferSchema = z.object({
     .string()
     .min(1, 'Parcel ID is required'),
   contract_document: z
-    .instanceof(File)
+    .any()
     .optional()
     .refine(
-      (file) => !file || file.size <= 10 * 1024 * 1024,
+      (file) => {
+        if (!file) return true;
+        if (typeof window === 'undefined') return true; // Skip validation on server
+        if (!(file instanceof File)) return false;
+        return file.size <= 10 * 1024 * 1024;
+      },
       'File size must be less than 10MB'
     )
     .refine(
-      (file) => 
-        !file || 
-        ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type),
+      (file) => {
+        if (!file) return true;
+        if (typeof window === 'undefined') return true; // Skip validation on server
+        if (!(file instanceof File)) return false;
+        return ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+      },
       'Only JPEG, PNG, and PDF files are allowed'
     ),
 });

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
-import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
+import { useState } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -11,9 +11,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000, // 1 minute
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, error: unknown) => {
               // Don't retry on 4xx errors
-              if (error?.status >= 400 && error?.status < 500) {
+              const httpError = error as { status?: number };
+              if (httpError?.status && httpError.status >= 400 && httpError.status < 500) {
                 return false;
               }
               return failureCount < 2;
@@ -33,26 +34,60 @@ export function Providers({ children }: { children: React.ReactNode }) {
         position="top-right"
         toastOptions={{
           duration: 4000,
+          className: "font-sans",
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#ffffff",
+            color: "#1f2937",
+            borderRadius: "12px",
+            border: "1px solid #e5e7eb",
+            boxShadow:
+              "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            padding: "16px 20px",
+            fontSize: "14px",
+            fontWeight: "500",
+            minWidth: "320px",
+            maxWidth: "400px",
           },
           success: {
             duration: 3000,
+            style: {
+              background: "#ffffff",
+              color: "#1f2937",
+              border: "1px solid #3b82f6",
+              borderLeft: "4px solid #3b82f6",
+            },
             iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
+              primary: "#3b82f6",
+              secondary: "#ffffff",
             },
           },
           error: {
             duration: 5000,
+            style: {
+              background: "#ffffff",
+              color: "#1f2937",
+              border: "1px solid #ef4444",
+              borderLeft: "4px solid #ef4444",
+            },
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: "#ef4444",
+              secondary: "#ffffff",
+            },
+          },
+          loading: {
+            style: {
+              background: "#ffffff",
+              color: "#1f2937",
+              border: "1px solid #9ca3af",
+              borderLeft: "4px solid #9ca3af",
+            },
+            iconTheme: {
+              primary: "#3b82f6",
+              secondary: "#ffffff",
             },
           },
         }}
       />
     </QueryClientProvider>
   );
-} 
+}

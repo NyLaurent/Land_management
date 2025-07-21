@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Land, Transfer, User, Profile } from '@/types';
+import { landOperations, transferOperations } from '@/lib/supabase';
 
 interface LandStore {
   // Auth state
@@ -26,6 +27,7 @@ interface LandStore {
   updateLand: (id: number, updates: Partial<Land>) => void;
   setSelectedLand: (land: Land | null) => void;
   setLandLoading: (loading: boolean) => void;
+  refreshLands: () => Promise<void>;
   
   // Transfer state
   transfers: Transfer[];
@@ -39,6 +41,8 @@ interface LandStore {
   removeTransfer: (id: number) => void;
   setSelectedTransfer: (transfer: Transfer | null) => void;
   setTransferLoading: (loading: boolean) => void;
+  refreshTransfers: () => Promise<void>;
+  refreshAllData: () => Promise<void>;
   
   // UI state
   isModalOpen: boolean;
@@ -46,7 +50,7 @@ interface LandStore {
   setModalState: (open: boolean, type?: 'create' | 'edit' | 'delete' | null) => void;
 }
 
-export const useLandStore = create<LandStore>((set) => ({
+export const useLandStore = create<LandStore>((set, get) => ({
   // Initial auth state
   user: null,
   profile: null,
@@ -95,6 +99,20 @@ export const useLandStore = create<LandStore>((set) => ({
   setSelectedLand: (land) => set({ selectedLand: land }),
   
   setLandLoading: (loading) => set({ isLandLoading: loading }),
+
+  refreshLands: async () => {
+    try {
+      set({ isLandLoading: true });
+      const { data, error } = await landOperations.getAll();
+      if (data && !error) {
+        set({ lands: data });
+      }
+    } catch (error) {
+      console.error('Error refreshing lands:', error);
+    } finally {
+      set({ isLandLoading: false });
+    }
+  },
   
   // Transfer actions
   setTransfers: (transfers) => set({ transfers }),
@@ -116,6 +134,25 @@ export const useLandStore = create<LandStore>((set) => ({
   setSelectedTransfer: (transfer) => set({ selectedTransfer: transfer }),
   
   setTransferLoading: (loading) => set({ isTransferLoading: loading }),
+
+  refreshTransfers: async () => {
+    try {
+      set({ isTransferLoading: true });
+      const { data, error } = await transferOperations.getAll();
+      if (data && !error) {
+        set({ transfers: data });
+      }
+    } catch (error) {
+      console.error('Error refreshing transfers:', error);
+    } finally {
+      set({ isTransferLoading: false });
+    }
+  },
+
+  refreshAllData: async () => {
+    const { refreshLands, refreshTransfers } = get();
+    await Promise.all([refreshLands(), refreshTransfers()]);
+  },
   
   // UI actions
   setModalState: (open, type = null) => set({ 

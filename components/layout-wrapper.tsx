@@ -8,9 +8,21 @@ interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
+function PublicLandingLayout({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen">{children}</div>;
+}
+
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // Landing page gets full screen treatment without navigation
+  if (pathname === "/") {
+    return <div className="min-h-screen">{children}</div>;
+  }
+
+  // Other protected pages get normal container layout
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-blue-50">
       <Navigation />
       <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
@@ -20,12 +32,17 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
 
-  // Auth pages don't need protection or navigation
+  // Auth pages don't need navigation
   if (pathname === "/signin" || pathname === "/signup") {
     return <div className="min-h-screen">{children}</div>;
   }
 
-  // Protected pages need AuthWrapper and Navigation
+  // Landing page is public - no auth protection needed
+  if (pathname === "/") {
+    return <PublicLandingLayout>{children}</PublicLandingLayout>;
+  }
+
+  // All other pages need authentication
   return (
     <AuthWrapper>
       <ProtectedLayout>{children}</ProtectedLayout>

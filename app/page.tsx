@@ -1,157 +1,115 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { MapPin, FileText, Plus, BarChart3 } from "lucide-react";
-import { useLandStore } from "@/lib/store";
+import { MapPin } from "lucide-react";
 
-export default function HomePage() {
-  const { lands, transfers } = useLandStore();
-
-  const stats = [
-    {
-      title: "Total Land Registrations",
-      value: lands.length,
-      description: "Registered land parcels",
-      icon: MapPin,
-      href: "/my-land",
-      color: "text-green-600 bg-green-100",
-    },
-    {
-      title: "Active Transfers",
-      value: transfers.filter(
-        (t) => t.status === "pending" || t.status === "in_progress"
-      ).length,
-      description: "Ongoing transfer requests",
-      icon: FileText,
-      href: "/transfers",
-      color: "text-blue-600 bg-blue-100",
-    },
-    {
-      title: "Completed Transfers",
-      value: transfers.filter((t) => t.status === "completed").length,
-      description: "Successfully completed",
-      icon: BarChart3,
-      href: "/transfers",
-      color: "text-purple-600 bg-purple-100",
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: "Register New Land",
-      description: "Register a new land parcel with supporting documents",
-      href: "/my-land",
-      icon: Plus,
-      color: "bg-green-600 hover:bg-green-700",
-    },
-    {
-      title: "Create Transfer",
-      description: "Initiate a land ownership transfer",
-      href: "/transfers",
-      icon: FileText,
-      color: "bg-blue-600 hover:bg-blue-700",
-    },
-  ];
-
+export default function LandingPage() {
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">
-          Welcome to Rwanda Land Administration
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Streamline land registration, transfers, and management with our
-          digital platform. Secure, transparent, and efficient land
-          administration for all Rwandans.
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Welcome Content */}
+      <motion.div
+        className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 sm:p-8 lg:p-12 order-2 lg:order-1"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <div className="max-w-md w-full">
+          {/* Logo */}
+          <motion.div
+            className="flex items-center mb-8 lg:mb-12"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <motion.div
+              className="p-3 bg-blue-100 rounded-full mr-4"
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+            </motion.div>
+            <span className="text-xl sm:text-2xl font-bold text-gray-800">
+              LMS
+            </span>
+          </motion.div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Link key={stat.title} href={stat.href}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stat.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+          {/* Welcome Message */}
+          <motion.div
+            className="mb-8 lg:mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <motion.h1
+              className="text-2xl sm:text-3xl lg:text-3xl font-bold text-gray-900 mb-3 lg:mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              Welcome to our
+            </motion.h1>
+            <motion.h2
+              className="text-xl sm:text-2xl lg:text-2xl font-semibold text-gray-800 mb-4 lg:mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              Land Management System
+            </motion.h2>
+            <motion.p
+              className="text-sm sm:text-base text-gray-600 leading-relaxed mb-6 lg:mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              Register land in minutes, not weeks. Track your application status
+              in real-time. No more paperwork or in-person visits.
+            </motion.p>
+          </motion.div>
 
-      {/* Quick Actions */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Card
-                key={action.title}
-                className="hover:shadow-lg transition-shadow"
+          {/* Get Started Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <Link href="/signup">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${action.color}`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{action.title}</CardTitle>
-                      <CardDescription>{action.description}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Link href={action.href}>
-                    <Button className="w-full">Get Started</Button>
+                <Button className="w-full py-3 sm:py-4 px-6 sm:px-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-base sm:text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                  Get Started
+                </Button>
+              </motion.div>
                   </Link>
-                </CardContent>
-              </Card>
-            );
-          })}
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Information Section */}
-      <Card className="bg-green-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="text-green-800">About This System</CardTitle>
-        </CardHeader>
-        <CardContent className="text-green-700">
-          <p className="mb-4">
-            This digital land administration system helps streamline Rwanda's
-            land management processes by:
-          </p>
-          <ul className="space-y-2 list-disc pl-6">
-            <li>Providing a centralized platform for land registration</li>
-            <li>Enabling secure and transparent land ownership transfers</li>
-            <li>Reducing processing time from weeks to days</li>
-            <li>Maintaining comprehensive digital records</li>
-            <li>Supporting dispute resolution with clear documentation</li>
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Right Side - Image */}
+      <motion.div
+        className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-screen relative overflow-hidden order-1 lg:order-2"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+      >
+        <motion.div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('/land2.jpg')",
+          }}
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        >
+          {/* Subtle Blue Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/80 via-transparent to-blue-700/80"></div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

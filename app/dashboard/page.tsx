@@ -1,0 +1,366 @@
+"use client";
+
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  MapPin,
+  FileText,
+  Plus,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { useLandStore } from "@/lib/store";
+
+export default function DashboardPage() {
+  const {
+    lands,
+    transfers,
+    profile,
+    refreshAllData,
+    isLandLoading,
+    isTransferLoading,
+  } = useLandStore();
+  const isRefreshing = isLandLoading || isTransferLoading;
+
+  const handleRefresh = () => {
+    refreshAllData();
+  };
+
+  const stats = [
+    {
+      title: "Total Land Registrations",
+      value: lands.length,
+      description: "Registered land parcels",
+      icon: MapPin,
+      href: "/my-land",
+      color: "text-blue-600 bg-blue-50",
+    },
+    {
+      title: "Active Transfers",
+      value: transfers.filter(
+        (t) => t.status === "pending" || t.status === "in_progress"
+      ).length,
+      description: "Ongoing transfer requests",
+      icon: FileText,
+      href: "/transfers",
+      color: "text-orange-600 bg-orange-50",
+    },
+    {
+      title: "Completed Transfers",
+      value: transfers.filter((t) => t.status === "completed").length,
+      description: "Successfully completed",
+      icon: BarChart3,
+      href: "/transfers",
+      color: "text-green-600 bg-green-50",
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: "Register New Land",
+      description: "Register a new land parcel with supporting documents",
+      href: "/my-land",
+      icon: Plus,
+      color: "bg-blue-600 hover:bg-blue-700",
+    },
+    {
+      title: "Create Transfer",
+      description: "Initiate a land ownership transfer",
+      href: "/transfers",
+      icon: FileText,
+      color: "bg-green-600 hover:bg-green-700",
+    },
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case "under_review":
+        return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "rejected":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "under_review":
+        return "bg-blue-100 text-blue-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Welcome Header with Refresh */}
+      <div className="flex justify-between items-center">
+        <div className="text-center space-y-4 flex-1">
+          <h1 className="text-4xl font-bold text-gray-900">
+            Welcome back, {profile?.first_name || "User"}!
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Manage your land registrations and transfers with ease. Your secure
+            digital land administration dashboard.
+          </p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          variant="outline"
+          className="flex items-center space-x-2"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          <span>Refresh</span>
+        </Button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Link key={stat.title} href={stat.href}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-lg bg-white rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">
+                    {stat.title}
+                  </CardTitle>
+                  <div className={`p-3 rounded-xl ${stat.color}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {stat.value}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Card
+                key={action.title}
+                className="hover:shadow-lg transition-shadow border-0 shadow-lg bg-white rounded-xl"
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-4 rounded-xl ${action.color}`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-gray-900">
+                        {action.title}
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        {action.description}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Link href={action.href}>
+                    <Button className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
+                      Get Started
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Recent Activity
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Land Registrations */}
+          <Card className="border-0 shadow-lg bg-white rounded-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                <span>Recent Land Registrations</span>
+              </CardTitle>
+              <CardDescription>
+                Your latest land registration applications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {lands.length === 0 ? (
+                <div className="text-center py-8">
+                  <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No land registrations yet</p>
+                  <Link href="/my-land">
+                    <Button className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
+                      Register Your First Land
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {lands.slice(0, 3).map((land) => (
+                    <div
+                      key={land.id}
+                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Parcel #{land.parcel_id}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {land.size.toLocaleString()} m² -{" "}
+                          {land.ownership_type}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(land.statusa)}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(land.statusa)}`}
+                        >
+                          {land.statusa.replace("_", " ").toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {lands.length > 3 && (
+                    <Link href="/my-land">
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4 py-2 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium rounded-lg transition-colors duration-200"
+                      >
+                        View All Registrations
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Transfers */}
+          <Card className="border-0 shadow-lg bg-white rounded-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-green-600" />
+                <span>Recent Transfers</span>
+              </CardTitle>
+              <CardDescription>Your latest transfer requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {transfers.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No transfers yet</p>
+                  <Link href="/transfers">
+                    <Button className="mt-4 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200">
+                      Create First Transfer
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transfers.slice(0, 3).map((transfer) => (
+                    <div
+                      key={transfer.id}
+                      className="flex items-center justify-between p-3 bg-green-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          To: {transfer.recipient_name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Parcel: {transfer.parcel_id}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(transfer.status)}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transfer.status)}`}
+                        >
+                          {transfer.status.replace("_", " ").toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {transfers.length > 3 && (
+                    <Link href="/transfers">
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4 py-2 border-2 border-green-300 text-green-600 hover:bg-green-50 font-medium rounded-lg transition-colors duration-200"
+                      >
+                        View All Transfers
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Help Section */}
+      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-0 shadow-lg rounded-xl">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-blue-900 text-xl">Need Help?</CardTitle>
+        </CardHeader>
+        <CardContent className="text-blue-800">
+          <p className="mb-4">
+            Our digital land administration system is here to help you manage
+            your land efficiently:
+          </p>
+          <ul className="space-y-2 list-disc pl-6">
+            <li>Register new land parcels with supporting documents</li>
+            <li>Transfer ownership securely with digital contracts</li>
+            <li>Track application status in real-time</li>
+            <li>Access your land records anytime, anywhere</li>
+            <li>Get support from our dedicated team</li>
+          </ul>
+          <div className="mt-6">
+            <Button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
+              Contact Support
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
