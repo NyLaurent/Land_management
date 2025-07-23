@@ -1,103 +1,107 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-// Authentication schemas
+// Auth validation schemas
 export const signUpSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email("Please enter a valid email address"),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
+    .min(6, "Password must be at least 6 characters")
+    .max(100, "Password must be less than 100 characters"),
   confirmPassword: z.string(),
   first_name: z
     .string()
-    .min(2, 'First name must be at least 2 characters')
-    .max(50, 'First name cannot exceed 50 characters'),
+    .min(1, "First name is required")
+    .max(50, "First name must be less than 50 characters"),
   last_name: z
     .string()
-    .min(2, 'Last name must be at least 2 characters')
-    .max(50, 'Last name cannot exceed 50 characters'),
+    .min(1, "Last name is required")
+    .max(50, "Last name must be less than 50 characters"),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export const signInSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
-export type SignUpFormData = z.infer<typeof signUpSchema>;
-export type SignInFormData = z.infer<typeof signInSchema>;
-
-// Land registration schema
+// Land registration validation schema
 export const landRegistrationSchema = z.object({
   parcel_id: z
-    .number()
-    .int('Parcel ID must be a whole number')
-    .positive('Parcel ID must be positive'),
+    .number({
+      message: "Parcel ID must be a number",
+    })
+    .positive("Parcel ID must be a positive number"),
   size: z
-    .number()
-    .positive('Land size must be positive')
-    .max(1000000, 'Land size cannot exceed 1,000,000 m²'),
+    .number({
+      message: "Land size must be a number",
+    })
+    .positive("Land size must be a positive number")
+    .max(1000000000, "Land size seems unrealistic"),
   ownership_type: z
     .string()
-    .min(2, 'Ownership type must be at least 2 characters')
-    .max(100, 'Ownership type cannot exceed 100 characters'),
+    .min(1, "Ownership type is required")
+    .max(100, "Ownership type must be less than 100 characters"),
   supporting_document: z
-    .any()
+    .instanceof(File)
     .optional()
     .refine(
       (file) => {
-        if (!file) return true;
-        if (typeof window === 'undefined') return true; // Skip validation on server
-        if (!(file instanceof File)) return false;
-        return file.size <= 10 * 1024 * 1024;
+        if (!file) return true; // Allow optional file
+        return file.size <= 10 * 1024 * 1024; // 10MB limit
       },
-      'File size must be less than 10MB'
+      "File size must be less than 10MB"
     )
     .refine(
       (file) => {
-        if (!file) return true;
-        if (typeof window === 'undefined') return true; // Skip validation on server
-        if (!(file instanceof File)) return false;
-        return ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+        if (!file) return true; // Allow optional file
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+        return allowedTypes.includes(file.type);
       },
-      'Only JPEG, PNG, and PDF files are allowed'
+      "Only PDF, JPEG, and PNG files are allowed"
+    ),
+  coordinates: z
+    .array(z.array(z.number()))
+    .optional()
+    .refine(
+      (coords) => {
+        if (!coords) return true; // Allow optional coordinates
+        return coords.length >= 3; // At least 3 points for a polygon
+      },
+      "Land boundary must have at least 3 coordinate points"
     ),
 });
 
-export type LandRegistrationFormData = z.infer<typeof landRegistrationSchema>;
-
-// Transfer schema
+// Transfer validation schema
 export const transferSchema = z.object({
   recipient_name: z
     .string()
-    .min(2, 'Recipient name must be at least 2 characters')
-    .max(100, 'Recipient name cannot exceed 100 characters'),
-  parcel_id: z
-    .string()
-    .min(1, 'Parcel ID is required'),
+    .min(1, "Recipient name is required")
+    .max(100, "Recipient name must be less than 100 characters"),
+  parcel_id: z.string().min(1, "Please select a parcel"),
   contract_document: z
-    .any()
+    .instanceof(File, { message: "Please upload a contract document" })
     .optional()
     .refine(
       (file) => {
-        if (!file) return true;
-        if (typeof window === 'undefined') return true; // Skip validation on server
-        if (!(file instanceof File)) return false;
-        return file.size <= 10 * 1024 * 1024;
+        if (!file) return true; // Allow optional file
+        return file.size <= 10 * 1024 * 1024; // 10MB limit
       },
-      'File size must be less than 10MB'
+      "File size must be less than 10MB"
     )
     .refine(
       (file) => {
-        if (!file) return true;
-        if (typeof window === 'undefined') return true; // Skip validation on server
-        if (!(file instanceof File)) return false;
-        return ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+        if (!file) return true; // Allow optional file
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+        return allowedTypes.includes(file.type);
       },
-      'Only JPEG, PNG, and PDF files are allowed'
+      "Only PDF, JPEG, and PNG files are allowed"
     ),
 });
 
+// Type inference
+export type SignUpFormData = z.infer<typeof signUpSchema>;
+export type SignInFormData = z.infer<typeof signInSchema>;
+export type LandRegistrationFormData = z.infer<typeof landRegistrationSchema>;
 export type TransferFormData = z.infer<typeof transferSchema>; 

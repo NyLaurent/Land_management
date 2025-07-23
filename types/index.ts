@@ -8,6 +8,9 @@ export interface Land {
   supporting_document: string; // URL to uploaded file
   statusa: 'pending' | 'under_review' | 'approved' | 'rejected';
   user_id?: string; // Added for authentication
+  coordinates?: number[][]; // Geographic coordinates for mapping [longitude, latitude]
+  center_lat?: number; // Center latitude for quick reference
+  center_lng?: number; // Center longitude for quick reference
 }
 
 export interface Transfer {

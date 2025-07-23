@@ -94,6 +94,9 @@ export const landOperations = {
     ownership_type: string;
     supporting_document: string;
     statusa?: string;
+    coordinates?: number[][];
+    center_lat?: number;
+    center_lng?: number;
   }) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
@@ -119,6 +122,22 @@ export const landOperations = {
     const { data, error } = await supabase
       .from('land')
       .update({ statusa: status })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    return { data, error };
+  },
+
+  // Update land coordinates
+  async updateCoordinates(id: number, coordinates: number[][], center_lat: number, center_lng: number) {
+    const { data, error } = await supabase
+      .from('land')
+      .update({ 
+        coordinates, 
+        center_lat, 
+        center_lng 
+      })
       .eq('id', id)
       .select()
       .single();

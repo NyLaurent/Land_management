@@ -12,6 +12,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Map,
 } from "lucide-react";
 
 import {
@@ -24,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LandParcelMap } from "@/components/land-parcel-map";
 import { landOperations, fileUpload } from "@/lib/supabase";
 import {
   landRegistrationSchema,
@@ -35,6 +37,10 @@ import { formatDate, getStatusColor, formatFileSize } from "@/lib/utils";
 export default function MyLandPage() {
   const { lands, addLand, isLandLoading } = useLandStore();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [drawnCoordinates, setDrawnCoordinates] = useState<number[][] | null>(
+    null
+  );
+  const [showMapView, setShowMapView] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -54,14 +60,39 @@ export default function MyLandPage() {
 
       // Upload file if provided
       if (data.supporting_document) {
-        const uploadResult = await fileUpload.uploadDocument(
-          data.supporting_document,
-          "land-documents"
-        );
-        if (uploadResult.error) {
-          throw new Error("Failed to upload document");
+        try {
+          const uploadResult = await fileUpload.uploadDocument(
+            data.supporting_document,
+            "land-documents"
+          );
+          if (uploadResult.error) {
+            console.error("Upload error details:", uploadResult.error);
+            throw new Error(
+              `Failed to upload document: ${uploadResult.error.message}`
+            );
+          }
+          documentUrl = uploadResult.data!.url;
+        } catch (error) {
+          console.error("File upload failed:", error);
+          throw new Error(
+            "Document upload failed. Please check if the storage bucket is set up correctly."
+          );
         }
-        documentUrl = uploadResult.data!.url;
+      }
+
+      // Calculate center coordinates if boundary is drawn
+      let centerLat, centerLng;
+      if (drawnCoordinates && drawnCoordinates.length > 0) {
+        const latSum = drawnCoordinates.reduce(
+          (sum, coord) => sum + coord[1],
+          0
+        );
+        const lngSum = drawnCoordinates.reduce(
+          (sum, coord) => sum + coord[0],
+          0
+        );
+        centerLat = latSum / drawnCoordinates.length;
+        centerLng = lngSum / drawnCoordinates.length;
       }
 
       // Create land record
@@ -71,6 +102,9 @@ export default function MyLandPage() {
         ownership_type: data.ownership_type,
         supporting_document: documentUrl,
         statusa: "pending",
+        coordinates: drawnCoordinates || undefined,
+        center_lat: centerLat,
+        center_lng: centerLng,
       });
     },
     onSuccess: (result) => {
@@ -81,6 +115,7 @@ export default function MyLandPage() {
         addLand(result.data);
         reset();
         setSelectedFile(null);
+        setDrawnCoordinates(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -103,6 +138,31 @@ export default function MyLandPage() {
     }
   };
 
+  const handleCoordinatesChange = (coordinates: number[][]) => {
+    setDrawnCoordinates(coordinates);
+    setValue("coordinates", coordinates);
+
+    // Calculate approximate area for size validation
+    const calculateArea = (coords: number[][]) => {
+      let area = 0;
+      const n = coords.length;
+
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        area += coords[i][0] * coords[j][1];
+        area -= coords[j][0] * coords[i][1];
+      }
+
+      return (Math.abs(area) * 6378137 * 6378137) / 2; // Rough conversion to m²
+    };
+
+    const estimatedArea = Math.round(calculateArea(coordinates));
+    setValue("size", estimatedArea);
+    toast.success(
+      `Land boundary updated! Estimated area: ${estimatedArea.toLocaleString()} m²`
+    );
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
@@ -120,13 +180,51 @@ export default function MyLandPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center space-x-3">
-        <MapPin className="h-8 w-8 text-blue-600" />
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Land</h1>
-          <p className="text-gray-600">Register and manage your land parcels</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <MapPin className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Land</h1>
+            <p className="text-gray-600">
+              Register and manage your land parcels
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={showMapView ? "default" : "outline"}
+            onClick={() => setShowMapView(!showMapView)}
+            className="flex items-center space-x-2"
+          >
+            <Map className="h-4 w-4" />
+            {showMapView ? "Hide Map" : "Show Map"}
+          </Button>
         </div>
       </div>
+
+      {/* Map View */}
+      {showMapView && (
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl text-gray-900 flex items-center space-x-2">
+              <Map className="h-6 w-6 text-blue-600" />
+              <span>Land Parcel Map</span>
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              View your registered land parcels and draw boundaries for new
+              registrations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LandParcelMap
+              lands={lands}
+              onCoordinatesChange={handleCoordinatesChange}
+              height="600px"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Registration Form */}
@@ -168,6 +266,11 @@ export default function MyLandPage() {
                   className="text-sm font-medium text-gray-700"
                 >
                   Land Size (m²)
+                  {drawnCoordinates && (
+                    <span className="text-blue-600 text-xs ml-2">
+                      (Auto-calculated from map)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   id="size"
@@ -175,9 +278,15 @@ export default function MyLandPage() {
                   placeholder="Enter land size in square meters"
                   {...register("size", { valueAsNumber: true })}
                   className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  readOnly={!!drawnCoordinates}
                 />
                 {errors.size && (
                   <p className="text-sm text-red-500">{errors.size.message}</p>
+                )}
+                {drawnCoordinates && (
+                  <p className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                    Size automatically calculated from drawn boundary
+                  </p>
                 )}
               </div>
 
@@ -235,12 +344,26 @@ export default function MyLandPage() {
                 </p>
               </div>
 
+              {drawnCoordinates && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Land boundary drawn on map
+                    </span>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    Geographic coordinates will be saved with your registration
+                  </p>
+                </div>
+              )}
+
               <div className="pt-4">
-              <Button
-                type="submit"
-                disabled={isSubmitting || createLandMutation.isPending}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || createLandMutation.isPending}
                   className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+                >
                   {isSubmitting || createLandMutation.isPending ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
@@ -249,7 +372,7 @@ export default function MyLandPage() {
                   ) : (
                     "Register Land"
                   )}
-              </Button>
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -298,6 +421,11 @@ export default function MyLandPage() {
                           Parcel #{land.parcel_id}
                         </span>
                         {getStatusIcon(land.statusa)}
+                        {land.coordinates && (
+                          <span title="Has map boundary">
+                            <Map className="h-4 w-4 text-blue-500" />
+                          </span>
+                        )}
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(land.statusa)}`}

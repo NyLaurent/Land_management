@@ -53,6 +53,7 @@ export function Sidebar() {
       toast.success("Logged out successfully!");
       router.push("/signin");
     } catch (error) {
+      console.error("Logout error:", error);
       toast.error("Error logging out");
     }
   };

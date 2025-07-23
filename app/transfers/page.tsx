@@ -10,7 +10,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Upload,
   Eye,
   Calendar,
   User,

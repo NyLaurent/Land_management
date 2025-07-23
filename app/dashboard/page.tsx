@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -13,13 +14,14 @@ import {
   MapPin,
   FileText,
   Plus,
-  BarChart3,
   Clock,
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Map,
 } from "lucide-react";
 import { useLandStore } from "@/lib/store";
+import { DashboardMap } from "@/components/dashboard-map";
 
 export default function DashboardPage() {
   const {
@@ -31,6 +33,7 @@ export default function DashboardPage() {
     isTransferLoading,
   } = useLandStore();
   const isRefreshing = isLandLoading || isTransferLoading;
+  const [showMapView, setShowMapView] = useState(false);
 
   const handleRefresh = () => {
     refreshAllData();
@@ -106,7 +109,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Header with Refresh */}
+      {/* Welcome Header with Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
@@ -117,18 +120,35 @@ export default function DashboardPage() {
             today
           </p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          variant="outline"
-          className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white transition-all duration-200"
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          <span>Refresh</span>
-        </Button>
+        
+        <div className="flex items-center space-x-3">
+          <Button
+            variant={showMapView ? "default" : "outline"}
+            onClick={() => setShowMapView(!showMapView)}
+            className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white transition-all duration-200"
+          >
+            <Map className="h-4 w-4" />
+            {showMapView ? "Hide Map" : "Show Map"}
+          </Button>
+          
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            variant="outline"
+            className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white transition-all duration-200"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            <span>Refresh</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Map View */}
+      {showMapView && (
+        <DashboardMap lands={lands} />
+      )}
 
       {/* Statistics Cards - Only 2 cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
